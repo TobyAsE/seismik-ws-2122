@@ -21,10 +21,13 @@ class RayTracer:
 
     def runReflections(self, numberOfAngles: int) -> None:
         angles = np.linspace(0, np.pi/2, numberOfAngles)
-        for angle in angles:
-            self.__runSingleReflection(angle)
 
-    def __runSingleReflection(self, angle: float):
+        for angle in angles:
+            lastDistance = self.__runSingleReflection(angle)
+            if lastDistance > self.__detector.extend()["rangeEnd"]:
+                break
+
+    def __runSingleReflection(self, angle: float) -> float:
         slownessVectorX: float = np.sin(angle)/self.__model.layer(0).speed
 
         # Reflections:
@@ -32,6 +35,7 @@ class RayTracer:
             timedistance = self.__reflectAtBoundary(
                 boundaryIndex, slownessVectorX)
             self.__detector.event(timedistance.distance, timedistance.time)
+        return timedistance.distance
 
     def __reflectAtBoundary(self, boundaryIndex: int, slownessVectorX: float) -> TimeDistanceTuple:
         model = self.__model
