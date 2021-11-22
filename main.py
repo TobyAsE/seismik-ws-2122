@@ -56,9 +56,9 @@ def main():
         'Usual distance-time-diagram')
     usualPlot.ticklabel_format(axis='x', style='sci',
                                scilimits=(3, 3), useMathText=True)
-    usualPlot.grid(b=True, which='major', linestyle='-', alpha=0.5)
+    usualPlot.grid(visible=True, which='major', linestyle='-', alpha=0.5)
     usualPlot.minorticks_on()
-    usualPlot.grid(b=True, which='minor', linestyle='--', alpha=0.25)
+    usualPlot.grid(visible=True, which='minor', linestyle='--', alpha=0.25)
     mpl.savefig('output/seismogram-usual.png')
 
     d.processData(reductionVelocity=6000)
@@ -74,9 +74,9 @@ def main():
         r'time-distance-diagram with $v_{red} = 6000\ ms^{-1}$')
     reducedPlot.ticklabel_format(axis='x', style='sci',
                                  scilimits=(3, 3), useMathText=True)
-    reducedPlot.grid(b=True, which='major', linestyle='-', alpha=0.5)
+    reducedPlot.grid(visible=True, which='major', linestyle='-', alpha=0.5)
     reducedPlot.minorticks_on()
-    reducedPlot.grid(b=True, which='minor', linestyle='--', alpha=0.25)
+    reducedPlot.grid(visible=True, which='minor', linestyle='--', alpha=0.25)
     mpl.savefig('output/seismogram-reduced.png')
 
 
