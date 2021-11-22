@@ -1,11 +1,12 @@
 import matplotlib
+from matplotlib import markers
 from RayTracer import RayTracer
 import sys
 import numpy as np
 import matplotlib.pyplot as mpl
 from Detector import Detector
 from Model import Model
-from PathTracker import PathTracker
+from PathTracker import PathTracker, PathType
 matplotlib.rcParams['text.usetex'] = True
 matplotlib.rcParams['figure.dpi'] = 300
 
@@ -16,6 +17,9 @@ def main():
     widthOfStructure = 200e3
     numberOfSensors = 600
     anglesForReflection = 10000
+    numberOfPathsPerFlavor = 5
+
+    colors = ["r", "g", "b", "y", "c", "m"]
 
     d = Detector(rangeStart=0, rangeEnd=widthOfStructure,
                  numberOfSensors=numberOfSensors, timeGranularity=timeGranularity)
@@ -41,6 +45,8 @@ def main():
 
     cm = 1/2.54
 
+    # Unreduced Seismogram
+
     d.processData()
     e = d.extend()
     normalizedUnreducedData = np.where(d.data() > 0, 1, 0)
@@ -61,6 +67,8 @@ def main():
     usualPlot.grid(visible=True, which='minor', linestyle='--', alpha=0.25)
     mpl.savefig('output/seismogram-usual.png')
 
+    # Reduced Seismogram
+
     d.processData(reductionVelocity=6000)
     e = d.extend()
     fig, reducedPlot = mpl.subplots(1, 1, figsize=(
@@ -78,6 +86,60 @@ def main():
     reducedPlot.minorticks_on()
     reducedPlot.grid(visible=True, which='minor', linestyle='--', alpha=0.25)
     mpl.savefig('output/seismogram-reduced.png')
+
+    # Paths
+    allThePaths = pt.relevantPaths(widthOfStructure)
+
+    fig, pathWays = mpl.subplots(1, 1, figsize=(14, 8))
+
+    # Surface
+    pathWays.plot([0, widthOfStructure], [0, 0], "k-")
+
+    # Model
+    for k in range(m.numberOfLayers() - 1):
+        depth = -m.depthAtBoundary(k)
+        pathWays.plot([0, widthOfStructure], [depth, depth], "k-")
+
+    # Paths
+    reflectedFlavors = list([] for _ in range(m.numberOfLayers()))
+    refractedFlavors = list([] for _ in range(m.numberOfLayers()))
+
+    for i in range(len(allThePaths)):
+        path = allThePaths[i]
+        if path.type() == PathType.REFLECTED:
+            reflectedFlavors[path.flavor()].append(path)
+        else:
+            refractedFlavors[path.flavor()].append(path)
+    for i in range(1, m.numberOfLayers()):
+        reflectedFlavors[i]
+        refractedFlavors[i]
+
+        reflectedIndices = np.round(np.linspace(
+            0, len(reflectedFlavors[i]) - 1, numberOfPathsPerFlavor)).astype(int)
+        refractedIndices = np.round(np.linspace(
+            0, len(refractedFlavors[i]) - 1, numberOfPathsPerFlavor)).astype(int)
+
+        selectedReflections = np.array(reflectedFlavors[i])[reflectedIndices]
+        selectedRefractions = np.array(refractedFlavors[i])[refractedIndices]
+
+        for ray in selectedReflections:
+            xs = [j[0] for j in ray.points()]
+            ys = [j[1] for j in ray.points()]
+            pathWays.plot(xs, ys, "-", marker='None',
+                          color=colors[i-1], linewidth=.5)
+
+        for ray in selectedRefractions:
+            xs = [j[0] for j in ray.points()]
+            ys = [j[1] for j in ray.points()]
+            pathWays.plot(xs, ys, "-", marker='None',
+                          color=colors[i - 1 + m.numberOfLayers()], linewidth=.5)
+
+    pathWays.ticklabel_format(axis='both', style='sci',
+                              scilimits=(3, 3), useMathText=True)
+    pathWays.set_xlabel("Distance in m")
+    pathWays.set_ylabel("Depth in m")
+
+    mpl.savefig('output/paths.png')
 
 
 if __name__ == '__main__':
